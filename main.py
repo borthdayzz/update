@@ -30,7 +30,7 @@ TERM_STYLES = {
     "reset": "\033[0m"
 }
 
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/borthdayzz/update/refs/heads/main/main.py"
 
 
@@ -165,26 +165,36 @@ def clear_console() -> None:
 def check_for_updates() -> bool:
     try:
         print_status("success", "Checking for updates...")
-        response = requests.get(GITHUB_RAW_URL)
+        response = requests.get(GITHUB_RAW_URL, timeout=5)
         if response.status_code == 200:
             github_version = response.text.split('VERSION = "')[1].split('"')[0]
             if github_version != VERSION:
                 return True
         return False
+    except requests.Timeout:
+        print_status("warning", "Update check timed out - skipping")
+        return False
+    except requests.ConnectionError:
+        print_status("warning", "Could not connect to update server - skipping")
+        return False
     except Exception as e:
-        print_status("warning", f"Failed to check for updates: {str(e)}")
+        print_status("warning", f"Update check failed: {str(e)}")
         return False
 
 
 def update_script() -> None:
     try:
-        response = requests.get(GITHUB_RAW_URL)
+        response = requests.get(GITHUB_RAW_URL, timeout=10)
         if response.status_code == 200:
             with open(__file__, "w", encoding="utf-8") as f:
                 f.write(response.text)
             print_status("success", "Update successful! Restarting...")
             python = sys.executable
             os.execl(python, python, *sys.argv)
+    except requests.Timeout:
+        print_status("error", "Update download timed out")
+    except requests.ConnectionError:
+        print_status("error", "Could not connect to update server")
     except Exception as e:
         print_status("error", f"Update failed: {str(e)}")
 
