@@ -31,7 +31,7 @@ TERM_STYLES = {
 }
 
 VERSION = "2.0.0"
-GITHUB_RAW_URL = "https://github.com/borthdayzz/ngl-spammer/raw/refs/heads/main/python/main.py"
+GITHUB_RAW_URL = "https://raw.githubusercontent.com/borthdayzz/update/refs/heads/main/main.py"
 
 
 def print_sync(msg: str) -> None:
@@ -167,8 +167,8 @@ def check_for_updates() -> bool:
         print_status("success", "Checking for updates...")
         response = requests.get(GITHUB_RAW_URL)
         if response.status_code == 200:
-            current_code = open(__file__, "r", encoding="utf-8").read()
-            if response.text != current_code:
+            github_version = response.text.split('VERSION = "')[1].split('"')[0]
+            if github_version != VERSION:
                 return True
         return False
     except Exception as e:
